@@ -44,6 +44,7 @@ for i in r:
     if (count+1) % 100 == 0:
         print 'Saving image: ', count+1
     X = misc.imread(images[i])
+    #X = misc.imresize(X, (320,240))  # if you want to resize the images
     X = np.transpose(X,(2,0,1))
     im_dat = caffe.io.array_to_datum(np.array(X).astype(np.uint8))
     im_dat.float_data.extend(poses[i])

@@ -1,0 +1,16 @@
+net: ".../caffe-posenet/posenet/models/train_bayesian_posenet.prototxt"
+test_initialization: false
+test_iter: 1000000000
+test_interval: 1000000000
+base_lr: 1e-3
+lr_policy: "step"
+gamma: 1.0
+stepsize: 1000000000
+display: 20
+max_iter: 120000
+solver_type: ADAGRAD
+weight_decay: 0.5
+snapshot: 2500
+snapshot_prefix: ".../caffe-posenet/posenet/models/training/bayesian_posenet"
+solver_mode: GPU
+
