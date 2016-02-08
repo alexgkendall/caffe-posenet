@@ -5,7 +5,7 @@ layers {
   name: "data"
   type: DATA
   data_param {
-    source: ".../dataset_train.txt"
+    source: ".../dataset_train_lmdb/"
     batch_size: 64
     backend: LMDB
   }
@@ -24,8 +24,8 @@ layers {
   name: "data"
   type: DATA
   data_param {
-    source: ".../dataset_test.txt"
-    batch_size: 64
+    source: ".../dataset_test_lmdb/"
+    batch_size: 1
     backend: LMDB
   }
   include {
