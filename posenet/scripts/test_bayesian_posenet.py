@@ -8,22 +8,24 @@ import math
 import pylab
 from sklearn.preprocessing import normalize
 from mpl_toolkits.mplot3d import Axes3D
+import lmdb 
+import random
 
 # Make sure that caffe is on the python path:
-caffe_root = '.../caffe-posenet/'  # Change to your directory to caffe-posenet
+caffe_root = '/scratch/PhD_Projects/Pose_Regression/caffe-posenet/'  # Change to your directory to caffe-posenet
 import sys
 sys.path.insert(0, caffe_root + 'python')
 
 import caffe
+from caffe.io import datum_to_array
 
 # Import arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
-parser.add_argument('--iter', type=int, required=True)
+parser.add_argument('--dataset', type=str, required=True)
 args = parser.parse_args()
 
-results = np.zeros((args.iter,4))
 
 caffe.set_mode_gpu()
 
@@ -31,17 +33,50 @@ net = caffe.Net(args.model,
                 args.weights,
                 caffe.TEST)
 
-for i in range(0, args.iter):
+sample_size = net.blobs['data'].data.shape[0]
+sample_w = net.blobs['data'].data.shape[2]
+sample_h = net.blobs['data'].data.shape[3]
 
-	net.forward()
+lmdb_env = lmdb.open(args.dataset)
+lmdb_txn = lmdb_env.begin()
+lmdb_cursor = lmdb_txn.cursor()
+datum = caffe.proto.caffe_pb2.Datum()
 
-	pose_q= net.blobs['label_wpqr'].data
-	pose_x= net.blobs['label_xyz'].data
+results = np.zeros((lmdb_env.stat()['entries'],4))
+
+count = 0
+
+for key, value in lmdb_cursor:
+	
+	datum.ParseFromString(value)
+
+	label = np.array(datum.float_data)
+	data = caffe.io.datum_to_array(datum)
+
+	w = data.shape[1]
+	h = data.shape[2]
+
+	# Take center crop...
+	x_c = int(w/2)
+	y_c = int(h/2)
+	input_image = data[:,x_c-sample_w/2:x_c+sample_w/2,y_c-sample_h/2:y_c+sample_h/2]
+
+	# ... or take random crop
+	#x = random.randint(0,w-sample_w)
+	#y = random.randint(0,h-sample_h)
+	#input_image = data[:,x:x+sample_w,y:y+sample_h]
+	
+	batch = np.repeat([input_image],sample_size,axis=0)
+
+	net.forward_all(data = batch)
+
+	pose_q = label[3:7]
+	pose_x = label[0:3]
 	predicted_q = net.blobs['cls3_fc_wpqr'].data 
 	predicted_x = net.blobs['cls3_fc_xyz'].data 
 
-	pose_q = np.squeeze(pose_q)
-	pose_x = np.squeeze(pose_x)
+	pose_q = np.repeat([pose_q],sample_size, axis=0)
+	pose_x = np.repeat([pose_x],sample_size, axis=0)
 	predicted_q = np.squeeze(predicted_q)
 	predicted_x = np.squeeze(predicted_x)
 	predictions = np.concatenate((predicted_x,predicted_q),axis=1)
@@ -73,9 +108,10 @@ for i in range(0, args.iter):
 	covariance_q = np.cov(predicted_q,rowvar=0)
 	uncertainty_q = math.sqrt(covariance_q[0,0] + covariance_q[1,1] + covariance_q[2,2] + covariance_q[3,3])
 
-	results[i,:] = [error_x, math.sqrt(uncertainty_x), theta, math.sqrt(uncertainty_q)]
+	results[count,:] = [error_x, math.sqrt(uncertainty_x), theta, math.sqrt(uncertainty_q)]
 
-	print 'Iteration:  ', i
+	count += 1
+	print 'Iteration:  ', count
 	print 'Error XYZ (m):  ', error_x
 	print 'Uncertainty XYZ:   ', uncertainty_x
 	print 'Error Q (degrees):  ', theta
