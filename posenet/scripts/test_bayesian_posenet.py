@@ -12,7 +12,7 @@ import lmdb
 import random
 
 # Make sure that caffe is on the python path:
-caffe_root = '/scratch/PhD_Projects/Pose_Regression/caffe-posenet/'  # Change to your directory to caffe-posenet
+caffe_root = '.../caffe-posenet/'  # Change to your directory to caffe-posenet
 import sys
 sys.path.insert(0, caffe_root + 'python')
 
@@ -24,6 +24,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, required=True)
 parser.add_argument('--weights', type=str, required=True)
 parser.add_argument('--dataset', type=str, required=True)
+parser.add_argument('--meanfile', type=str, required=True)
 args = parser.parse_args()
 
 
@@ -46,6 +47,11 @@ results = np.zeros((lmdb_env.stat()['entries'],4))
 
 count = 0
 
+blob_meanfile = caffe.proto.caffe_pb2.BlobProto()
+data_meanfile = open(args.meanfile , 'rb' ).read()
+blob_meanfile.ParseFromString(data_meanfile)
+meanfile = np.squeeze(np.array( caffe.io.blobproto_to_array(blob_meanfile)))
+
 for key, value in lmdb_cursor:
 	
 	datum.ParseFromString(value)
@@ -53,15 +59,17 @@ for key, value in lmdb_cursor:
 	label = np.array(datum.float_data)
 	data = caffe.io.datum_to_array(datum)
 
+	data = data-meanfile
+
 	w = data.shape[1]
 	h = data.shape[2]
 
-	# Take center crop...
+	## Take center crop...
 	x_c = int(w/2)
 	y_c = int(h/2)
 	input_image = data[:,x_c-sample_w/2:x_c+sample_w/2,y_c-sample_h/2:y_c+sample_h/2]
 
-	# ... or take random crop
+	## ... or take random crop
 	#x = random.randint(0,w-sample_w)
 	#y = random.randint(0,h-sample_h)
 	#input_image = data[:,x:x+sample_w,y:y+sample_h]
