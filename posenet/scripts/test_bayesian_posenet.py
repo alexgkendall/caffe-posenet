@@ -65,16 +65,19 @@ for key, value in lmdb_cursor:
 	h = data.shape[2]
 
 	## Take center crop...
-	x_c = int(w/2)
-	y_c = int(h/2)
-	input_image = data[:,x_c-sample_w/2:x_c+sample_w/2,y_c-sample_h/2:y_c+sample_h/2]
+	#x_c = int(w/2)
+	#y_c = int(h/2)
+	#input_image = data[:,x_c-sample_w/2:x_c+sample_w/2,y_c-sample_h/2:y_c+sample_h/2]
+	#batch = np.repeat([input_image],sample_size,axis=0)
 
 	## ... or take random crop
-	#x = random.randint(0,w-sample_w)
-	#y = random.randint(0,h-sample_h)
-	#input_image = data[:,x:x+sample_w,y:y+sample_h]
+	batch = np.zeros((sample_size,3,sample_w,sample_h))
+	for i in range(0, sample_size):
+		x = random.randint(0,w-sample_w)
+		y = random.randint(0,h-sample_h)
+		input_image = data[:,x:x+sample_w,y:y+sample_h]
+		batch[i,:,:,:] = input_image
 	
-	batch = np.repeat([input_image],sample_size,axis=0)
 
 	net.forward_all(data = batch)
 
