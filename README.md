@@ -8,7 +8,7 @@ As described in the ICCV 2015 paper **PoseNet: A Convolutional Network for Real-
  * Download the Cambridge Landmarks dataset [from here.](http://mi.eng.cam.ac.uk/projects/relocalisation/)
  * Download models and trained weights [from here.](http://mi.eng.cam.ac.uk/~agk34/resources/PoseNet.zip)
 
-Create an LMDB localisation dataset with ```caffe-posenet/posenet/scripts/create_posenet_lmdb_dataset.py``` Change lines 1, 13 & 14 to the appropriate directories.
+Create an LMDB localisation dataset with ```caffe-posenet/posenet/scripts/create_posenet_lmdb_dataset.py``` Change lines 1, 11 & 12 to the appropriate directories.
 
 Test PoseNet with ```caffe-posenet/posenet/scripts/test_posenet.py``` using the command ```python test_posenet.py --model your_model.prototxt --weights your_weights.caffemodel --iter size_of_dataset```
 
