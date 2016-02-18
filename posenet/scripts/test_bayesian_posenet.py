@@ -96,7 +96,7 @@ for key, value in lmdb_cursor:
 	q1 = pose_q / np.linalg.norm(pose_q,axis=1)[:,None]
 	q2 = predicted_q / np.linalg.norm(predicted_q,axis=1)[:,None]
 	d = abs(np.sum(np.multiply(q1,q2),axis=1))
-	theta_individual = np.arccos(d) * 180/math.pi
+	theta_individual = 2 * np.arccos(d) * 180/math.pi
 	error_x_individual = np.linalg.norm(pose_x-predicted_x,axis=1)
 
 	#Total error
@@ -108,7 +108,7 @@ for key, value in lmdb_cursor:
 	q1 = pose_q / np.linalg.norm(pose_q)
 	q2 = predicted_q_mean / np.linalg.norm(predicted_q_mean)
 	d = abs(np.sum(np.multiply(q1,q2)))
-	theta = np.arccos(d) * 180/math.pi
+	theta = 2 * np.arccos(d) * 180/math.pi
 	error_xyz = pose_x-predicted_x_mean
 	error_x = np.linalg.norm(error_xyz)
 
